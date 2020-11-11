@@ -29,7 +29,7 @@ mappings {
       GET: "listSwitches"
     ]
   }
-  path("/switches/:command") {
+  path("/switches/:command/:sname") {
     action: [
       PUT: "updateSwitches"
     ]
@@ -135,20 +135,31 @@ def listSwitches() {
 void updateSwitches() {
     // use the built-in request object to get the command parameter
     def command = params.command
+    def sname = params.sname
 
-    // all switches have the comand
-    // execute the command on all switches
-    // (note we can do this on the array - the command will be invoked on every element
+    log.info "Issued command $command for switch $sname"
+
+    def theSwitch = switches.find { it.displayName == "${sname}" }
+    log.debug "Selected switch ${theSwitch}"
+    def switchCurrent = theSwitch.currentValue("switch")
+    log.debug "Current value: ${switchCurrent}"
+
     switch(command) {
-        case "on":
-            switches.on()
-            break
-        case "off":
-            switches.off()
-            break
-        default:
-            httpError(400, "$command is not a valid command for all switches specified")
-    }
+       	case "on":
+			theSwitch.on()
+	        break
+	    case "off":
+	        theSwitch.off()
+	        break
+	    case "toggle":
+	     	if(switchCurrent == "on")
+	            {theSwitch.off()}
+	        else
+	            {theSwitch.on()}
+    	    break
+	    default:
+	        httpError(400, "$command is not a valid command for the specified switch")
+	}
 
 }
 def installed() {}
